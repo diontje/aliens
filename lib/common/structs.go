@@ -1,5 +1,5 @@
 /*
- * common_structs.go
+ * structs.go
  *
  */
 package common
