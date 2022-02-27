@@ -51,8 +51,8 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initializeGame)
-	rootCmd.PersistentFlags().StringVarP(&cmdArgs.WorldName, "world", "", "",
-		"name of planet (default is earth)")
+	rootCmd.PersistentFlags().StringVarP(&cmdArgs.WorldName, "world", "", "earth",
+		"game file")
 	rootCmd.PersistentFlags().StringVarP(&cmdArgs.WorldFileLocation, "path", "", "",
 		"default game file location (default is ./worlds/)")
 	rootCmd.PersistentFlags().StringVar(&verbosityLevelStr, "verbose", "",
@@ -66,6 +66,11 @@ func init() {
 func initializeGame() {
 	// check if config file exists and is valid
 	cmdArgs.WorldName = strings.TrimSpace(cmdArgs.WorldName)
-	fmt.Printf("world=%s\n", cmdArgs.WorldName)
+	world, err := common.LoadGameMap(cmdArgs)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Printf("world[Bar] cities=%+v\n", world.Cities["Bar"])
+	fmt.Printf("world[Foo] cities=%+v\n", world.Cities["Foo"])
 	return
 }
