@@ -40,7 +40,7 @@ func IsValidWorld(world *World, params ...string) (err error) {
 	}
 
 	// check the correctness of each line of the game file map
-	cities := make(map[string]*Directions)
+	m := make(map[string]*Directions)
 	for i := 0; i < len(file) - 1; i++ {
 		re := regexp.MustCompile(`(^[a-zA-Z]+) (((?i)(north|south|east|west)=[a-zA-Z\-]+(\s|$))+)`)
 		vals := re.FindStringSubmatch(file[i])
@@ -48,25 +48,42 @@ func IsValidWorld(world *World, params ...string) (err error) {
 			return errors.New(fmt.Sprintf("invalid map entry found on line %d, %s", i, file[i]))
 		}
 		city := vals[1]
+		// check if city already exists, if so discard, duplicate cities not allowed
+		if len(m) != 0 {
+			if _, ok := m[city]; ok {
+				return errors.New(fmt.Sprintf("duplicate city data detected, city=%s\n", city))
+			}
+		}
+		world.Cities = append(world.Cities, city)
+		// load city map details
 		var d = new(Directions)
-		// load city directions
 		directions := strings.Split(vals[2], " ")
 		for _, e := range directions {
 			parts := strings.Split(e, "=")
-			switch strings.ToLower(parts[0]) {
+			// TODO: check regexp, ensure that we're not picking up empty parts
+			if len(parts) != 2 {
+				continue
+			}
+			direction := strings.ToLower(parts[0])
+			toCity := strings.TrimSpace(parts[1])
+			// ignore directions with no city value
+			if toCity == "" {
+				continue
+			}
+			switch direction {
 			case "north":
-				d.North = strings.TrimSpace(parts[1])
+				d.North = toCity
 			case "south":
-				d.South = strings.TrimSpace(parts[1])
+				d.South = toCity
 			case "east":
-				d.East = strings.TrimSpace(parts[1])
+				d.East = toCity
 			case "west":
-				d.West = strings.TrimSpace(parts[1])
+				d.West = toCity
 			}
 		}
-		cities[city] = d
+		m[city] = d
 	}
-	world.Cities = cities
+	world.Map = m
 	return
 }
 
@@ -75,7 +92,7 @@ func IsValidWorld(world *World, params ...string) (err error) {
 func LoadGameMap(cmdArgs CmdArgs) (world *World, err error) {
 	world = &World{
 		Name: cmdArgs.WorldName,
-		Cities: nil,
+		Map: nil,
 	}
 	err = IsValidWorld(world, cmdArgs.WorldFileLocation)
 	return
