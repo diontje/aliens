@@ -18,16 +18,17 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/diontje/aliens/lib/common"
+	"github.com/diontje/aliens/lib/logging"
 
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
-var Debug bool
-var cmdArgs common.CmdArgs        // data variable for commandline args
-var verbosityLevelStr string      // logging verbosity level
+var cmdArgs common.CmdArgs        // commandline args
+var log *logrus.Logger            // log handle
+var err error
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -37,7 +38,9 @@ var rootCmd = &cobra.Command{
 from other worlds`,
   // Uncomment the following line if your bare application
   // has an action associated with it:
-	Run: func(cmd *cobra.Command, args []string) { },
+	Run: func(cmd *cobra.Command, args []string) {
+		// nothing to do
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -50,27 +53,16 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initializeGame)
-	rootCmd.PersistentFlags().StringVarP(&cmdArgs.WorldName, "world", "", "earth",
-		"game file")
-	rootCmd.PersistentFlags().StringVarP(&cmdArgs.WorldFileLocation, "path", "", "",
-		"default game file location (default is ./worlds/)")
-	rootCmd.PersistentFlags().StringVar(&verbosityLevelStr, "verbose", "",
-		"info=0, warn=1, error=2")
-	rootCmd.PersistentFlags().BoolVarP(&Debug, "debug", "", false,
+	cobra.OnInitialize(initialize)
+	rootCmd.PersistentFlags().BoolVarP(&cmdArgs.Debug, "debug", "", false,
 		"enable debug console logging level")
 }
 
-// initializeGame() loads the game map and performing error checking, as well as
-// processing any commandline args such as logging
-func initializeGame() {
-	// check if config file exists and is valid
-	cmdArgs.WorldName = strings.TrimSpace(cmdArgs.WorldName)
-	world, err := common.LoadGameMap(cmdArgs)
+// initialize() process commandline args if any and handle logging setup
+func initialize() {
+	cmdArgs.Log, err = logging.GetLogger(cmdArgs.Debug)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(err.Error())
+		os.Exit(1)
 	}
-	fmt.Printf("world[Bar] cities=%+v\n", world.Cities["Bar"])
-	fmt.Printf("world[Foo] cities=%+v\n", world.Cities["Foo"])
-	return
 }
