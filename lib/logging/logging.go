@@ -31,6 +31,5 @@ func initLogger(debug bool) {
 	})
 	if debug {
 		log.SetLevel(logrus.DebugLevel)
-		log.Info("logging set to debug")
 	}
 }

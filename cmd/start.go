@@ -17,7 +17,6 @@ package cmd
 
 import (
 	"fmt"
-	_"os"
 	"strconv"
 	"strings"
 
@@ -53,8 +52,6 @@ aliens start -n 5
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		log := cmdArgs.Log
-		log.Debug("start called")
 		err := actions.Start(cmdArgs)
 		if err != nil {
 			fmt.Println(err.Error())

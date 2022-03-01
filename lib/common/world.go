@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -21,7 +22,37 @@ var (
 
 const defaultGame string = "worlds/earth.dat"
 
-// IsValidWorld() verifies the syntax or correctness of game world map
+// DumpGameResults() writes the end of game map to file
+func DumpGameResults(cmdArgs CmdArgs, world *World) error {
+    f, err := os.Create("out.dat")
+    if err != nil {
+		return err
+    }
+    defer f.Close()
+	for k, v := range world.Map {
+		var directions []string
+		if v.North != "" {
+			directions = append(directions, fmt.Sprintf("North=%s", v.North))
+		}
+		if v.South != "" {
+			directions = append(directions, fmt.Sprintf("South=%s", v.South))
+		}
+		if v.East != "" {
+			directions = append(directions, fmt.Sprintf("East=%s", v.East))
+		}
+		if v.West != "" {
+			directions = append(directions, fmt.Sprintf("West=%s", v.West))
+		}
+		s := strings.TrimSpace(strings.Join(directions, " "))
+		_, err = f.WriteString(fmt.Sprintf("%s %s\n", k, s))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// IsValidWorld() verifies the syntax or correctness of the game world map
 // returns err with faulty entry or ptr to common.World with data contents if valid
 func IsValidWorld(world *World, params ...string) (err error) {
 	var file []string
@@ -30,6 +61,7 @@ func IsValidWorld(world *World, params ...string) (err error) {
 	if len(params[0]) == 0 {
 		file, err = readGameFile(defaultGame)
 	} else {
+		//TODO: add support
 		file, err = readGameFile(params[0])
 	}
 	if err != nil {
@@ -48,19 +80,19 @@ func IsValidWorld(world *World, params ...string) (err error) {
 			return errors.New(fmt.Sprintf("invalid map entry found on line %d, %s", i, file[i]))
 		}
 		city := vals[1]
-		// check if city already exists, if so discard, duplicate cities not allowed
+		// check if city already exists, if so discard, duplicate cities are not allowed
 		if len(m) != 0 {
 			if _, ok := m[city]; ok {
 				return errors.New(fmt.Sprintf("duplicate city data detected, city=%s\n", city))
 			}
 		}
 		world.Cities = append(world.Cities, city)
-		// load city map details
+		// load each city's map details
 		var d = new(Directions)
 		directions := strings.Split(vals[2], " ")
 		for _, e := range directions {
 			parts := strings.Split(e, "=")
-			// TODO: check regexp, ensure that we're not picking up empty parts
+			// TODO: check regexp, ensure that we're not picking up empty parts (spaces)
 			if len(parts) != 2 {
 				continue
 			}
@@ -87,12 +119,14 @@ func IsValidWorld(world *World, params ...string) (err error) {
 	return
 }
 
-// LoadGameMap() accepts the filename of thhe selected world to play
-// the default is earth.dat, returns a ptr to World
+// LoadGameMap() accepts the filename of the selected world to play
+// (the default is earth.dat), and returns a ptr to the intialized game World
 func LoadGameMap(cmdArgs CmdArgs) (world *World, err error) {
 	world = &World{
-		Name: cmdArgs.WorldName,
 		Map: nil,
+		Name: cmdArgs.WorldName,
+		NumAliensKilled: 0,
+		NumAliensTrapped: 0,
 	}
 	err = IsValidWorld(world, cmdArgs.WorldFileLocation)
 	return
@@ -107,3 +141,5 @@ func readGameFile(filename string) (file []string, err error) {
 	file = strings.Split(string(fileBytes), "\n")
 	return file, err
 }
+
+
