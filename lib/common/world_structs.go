@@ -14,8 +14,10 @@ type Directions struct {
 
 // struct type defining a game's world or map dat file
 type World struct {
-	Name   string
-	Cities []string               // list of world cities
-	Map    map[string]*Directions // direction => city
-	Aliens map[int]*Alien         // Id => alien
+	Aliens            map[int]*Alien         // Id => alien
+	Cities            []string               // list of world cities
+	Map               map[string]*Directions // direction => city
+	Name              string
+	NumAliensKilled   int
+	NumAliensTrapped  int
 }
