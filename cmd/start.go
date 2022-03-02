@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -45,6 +46,10 @@ aliens start -n 5
 			i, err := strconv.Atoi(numAliens)
 			if err != nil {
 				return err
+			}
+			if (i < 2) {
+				fmt.Printf("numAliens must be 2 or more, received --numAliens=%d\n", i)
+				os.Exit(1)
 			}
 			cmdArgs.NumAliens = i
 		} else {

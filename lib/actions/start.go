@@ -97,21 +97,20 @@ func play(cmdArgs common.CmdArgs, world *common.World) error {
 	log := cmdArgs.Log
 	log.Debugf("playing with N=%d aliens", len(world.Aliens))
 	for i := 1; i <= MAXITERATIONS; i++ {
-		for j := 0; j < len(world.Aliens); j++ {
-			log.Debugf("manipulating alien id=%d", world.Aliens[j].Id)
-			if world.Aliens[j].Trapped {
+		for _, alien := range world.Aliens {
+			log.Debugf("manipulating alien id=%d", alien.Id)
+			if alien.Trapped {
 				continue
 			}
 			wg.Add(1)
-			go common.Move(&wg, world.Aliens[j].Id, world, cmdArgs.Log)
+			go common.Move(&wg, alien.Id, world, cmdArgs.Log)
 		}
 		wg.Wait()
 		log.Debugf("all aliens have moved, checking for fighting")
 
 		// loop through each city
-		k := 0
-		for len(world.Map) != 0 && len(world.Cities) != 0 && k < len(world.Cities) {
-			city := world.Cities[k]
+		cities := world.Cities
+		for _, city := range cities {
 			fighting := updateCity(cmdArgs, world, city)
 			if fighting {
 				// destroy the city, update the game map
@@ -120,10 +119,12 @@ func play(cmdArgs common.CmdArgs, world *common.World) error {
 					return err
 				}
 				log.Infof("city=%s, destroyed", city)
-				k = 0
+				common.Remove(cities, city)
 			} else {
 				log.Infof("no fighting in city=%s", city)
-				k++
+			}
+			if len(cities) == 0 {
+				break
 			}
 		}
 		if len(world.Aliens) == 1 {
@@ -164,7 +165,7 @@ func updateCity(cmdArgs common.CmdArgs, world *common.World, city string) (fight
 		}
 		fighting = true
 	} else {
-		log.Debugf("fighting=%t, city not destroyed", fighting)
+		log.Debugf("fighting=%t, city continues to flourish", fighting)
 	}
 	return
 }
