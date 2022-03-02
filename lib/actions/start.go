@@ -98,7 +98,7 @@ func play(cmdArgs common.CmdArgs, world *common.World) error {
 	log.Debugf("playing with N=%d aliens", len(world.Aliens))
 	for i := 1; i <= MAXITERATIONS; i++ {
 		for j := 0; j < len(world.Aliens); j++ {
-			log.Debugf("working alien id=%d", world.Aliens[j].Id)
+			log.Debugf("manipulating alien id=%d", world.Aliens[j].Id)
 			if world.Aliens[j].Trapped {
 				continue
 			}
@@ -131,12 +131,9 @@ func play(cmdArgs common.CmdArgs, world *common.World) error {
 			break
 		}
 		// check for empty map and trapped aliens two conditions
-		if world.NumAliensTrapped == cmdArgs.NumAliens - world.NumAliensKilled {
-			log.Debug("all aliens are Trapped")
-			break
-		}
-		if len(world.Map) == 0 && len(world.Aliens) != 0 {
-			log.Debug("all aliens are Trapped")
+		if (world.NumAliensTrapped == cmdArgs.NumAliens - world.NumAliensKilled) ||
+				(len(world.Map) == 0 && len(world.Aliens) != 0) {
+			log.Info("all aliens are Trapped")
 			break
 		}
 	}
@@ -153,21 +150,21 @@ func updateCity(cmdArgs common.CmdArgs, world *common.World, city string) (fight
 	fighting = false
 	log.Debugf("updating city=%s", city)
 	for _, alien := range world.Aliens {
-		log.Debugf("working alien Id=%d", alien.Id)
+		log.Debugf("manipulating alien Id=%d", alien.Id)
 		if alien.Location == city {
 			ids = append(ids, alien.Id)
 		}
 	}
 	if len(ids) > 1 {
 		log.Infof("aliens Ids=%v, are fighting in city=%s", ids, city)
-		log.Debug("killing off aliens and setting city for destruction")
+		log.Info("killing off aliens and setting city for destruction")
 		world.NumAliensKilled = len(ids)
 		for j := 0; j < len(ids); j++ {
 			delete(world.Aliens, ids[j])
 		}
 		fighting = true
 	} else {
-		log.Debug("city remains")
+		log.Debugf("fighting=%t, city not destroyed", fighting)
 	}
 	return
 }
