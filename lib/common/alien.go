@@ -62,13 +62,3 @@ func Move(wg *sync.WaitGroup, Id int, world *World, log *logrus.Logger) error {
 	log.Infof("alien Id=%d moved", Id)
 	return nil
 }
-
-// returns true if slice contains a string, false otherwise
-func contains(elems []string, v string) bool {
-    for _, s := range elems {
-        if v == s {
-            return true
-        }
-    }
-    return false
-}

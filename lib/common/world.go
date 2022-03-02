@@ -7,7 +7,6 @@ package common
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -123,6 +122,8 @@ func IsValidWorld(world *World, params ...string) (err error) {
 // (the default is earth.dat), and returns a ptr to the intialized game World
 func LoadGameMap(cmdArgs CmdArgs) (world *World, err error) {
 	world = &World{
+		Aliens: nil,
+		Cities: nil,
 		Map: nil,
 		Name: cmdArgs.WorldName,
 		NumAliensKilled: 0,
@@ -131,15 +132,3 @@ func LoadGameMap(cmdArgs CmdArgs) (world *World, err error) {
 	err = IsValidWorld(world, cmdArgs.WorldFileLocation)
 	return
 }
-
-// readGameFile() returns game file map contents into slice
-func readGameFile(filename string) (file []string, err error) {
-	fileBytes, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return file, err
-	}
-	file = strings.Split(string(fileBytes), "\n")
-	return file, err
-}
-
-
