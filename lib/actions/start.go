@@ -72,19 +72,19 @@ func deleteCity(cmdArgs common.CmdArgs, world *common.World, city string) error 
 	// now delete all directions pointing to deleted city
 	for k := range world.Map {
 		if world.Map[k].North == city {
-			log.Debugf("clearing direction North for city=%s", city)
+			log.Debugf("clearing direction North for city=%s", k)
 			world.Map[k].North = ""
 		}
 		if world.Map[k].South == city {
-			log.Debugf("clearing direction South for city=%s", city)
+			log.Debugf("clearing direction South for city=%s", k)
 			world.Map[k].South = ""
 		}
 		if world.Map[k].East == city {
-			log.Debug("clearing direction East for city=%s", city)
+			log.Debug("clearing direction East for city=%s", k)
 			world.Map[k].East = ""
 		}
 		if world.Map[k].West == city {
-			log.Debug("clearing direction West for city=%s", city)
+			log.Debug("clearing direction West for city=%s", k)
 			world.Map[k].West = ""
 		}
 	}
@@ -110,7 +110,7 @@ func play(cmdArgs common.CmdArgs, world *common.World) error {
 
 		// loop through each city
 		k := 0
-		for k < len(world.Cities) {
+		for len(world.Map) != 0 && len(world.Cities) != 0 && k < len(world.Cities) {
 			city := world.Cities[k]
 			fighting := updateCity(cmdArgs, world, city)
 			if fighting {
@@ -129,7 +129,13 @@ func play(cmdArgs common.CmdArgs, world *common.World) error {
 		if len(world.Aliens) == 1 {
 			log.Debug("there can only be 1, we have a winner")
 			break
-		} else if world.NumAliensTrapped == cmdArgs.NumAliens - world.NumAliensKilled {
+		}
+		// check for empty map and trapped aliens two conditions
+		if world.NumAliensTrapped == cmdArgs.NumAliens - world.NumAliensKilled {
+			log.Debug("all aliens are Trapped")
+			break
+		}
+		if len(world.Map) == 0 && len(world.Aliens) != 0 {
 			log.Debug("all aliens are Trapped")
 			break
 		}
