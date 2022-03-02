@@ -18,12 +18,12 @@ const MAXITERATIONS int = 10000
 func Start(cmdArgs common.CmdArgs) error {
 	log := cmdArgs.Log
 	log.Debug("loading and validating game file")
-	log.Debug("calling LoadGameMap(), with args=%+v", cmdArgs)
+	log.Debugf("calling LoadGameMap(), with args=%+v", cmdArgs)
 	world, err := common.LoadGameMap(cmdArgs)
 	if err != nil {
 		return err
 	}
-	log.Debug("calling InitAliens(), with NumAliens=%d, world=%+v",
+	log.Debugf("calling InitAliens(), with NumAliens=%d, world=%+v",
 		cmdArgs.NumAliens, world)
 	err = common.InitAliens(world, cmdArgs.NumAliens)
 	if err != nil {
@@ -38,9 +38,9 @@ func Start(cmdArgs common.CmdArgs) error {
 	if err != nil {
 		return err
 	}
-	log.Debug("alien stats at end of game")
-	for i := 0; i < cmdArgs.NumAliens; i++ {
-		log.Debugf("aliens id=%d data=%+v", i, world.Aliens[i])
+	log.Debug("end of game alien stats")
+	for _, alien := range world.Aliens {
+		log.Debugf("aliens Id=%d, data=%+v", alien.Id, alien)
 	}
 	log.Debugf("dumping end of game map to out.dat")
 	err = common.DumpGameResults(cmdArgs, world)
@@ -65,15 +65,19 @@ func deleteCity(cmdArgs common.CmdArgs, world *common.World, city string) error 
 		}
 	}
 	delete(world.Map, city)
-	// now delete directions pointing to city
-	for k, _ := range world.Map {
+	world.Cities = common.Remove(world.Cities, city)
+	if len(world.Map) == 0 { // last line in map deleted
+		return nil
+	}
+	// now delete all directions pointing to deleted city
+	for k := range world.Map {
 		if world.Map[k].North == city {
 			log.Debugf("clearing direction North for city=%s", city)
-			world.Map[k].East = ""
+			world.Map[k].North = ""
 		}
 		if world.Map[k].South == city {
 			log.Debugf("clearing direction South for city=%s", city)
-			world.Map[k].East = ""
+			world.Map[k].South = ""
 		}
 		if world.Map[k].East == city {
 			log.Debug("clearing direction East for city=%s", city)
@@ -81,7 +85,7 @@ func deleteCity(cmdArgs common.CmdArgs, world *common.World, city string) error 
 		}
 		if world.Map[k].West == city {
 			log.Debug("clearing direction West for city=%s", city)
-			world.Map[k].East = ""
+			world.Map[k].West = ""
 		}
 	}
 	return nil
@@ -103,7 +107,11 @@ func play(cmdArgs common.CmdArgs, world *common.World) error {
 		}
 		wg.Wait()
 		log.Debugf("all aliens have moved, checking for fighting")
-		for _, city := range world.Cities {
+
+		// loop through each city
+		k := 0
+		for k < len(world.Cities) {
+			city := world.Cities[k]
 			fighting := updateCity(cmdArgs, world, city)
 			if fighting {
 				// destroy the city, update the game map
@@ -112,16 +120,17 @@ func play(cmdArgs common.CmdArgs, world *common.World) error {
 					return err
 				}
 				log.Infof("city=%s, destroyed", city)
+				k = 0
+			} else {
+				log.Infof("no fighting in city=%s", city)
+				k++
 			}
 		}
-		//log.Debugf("waiting for interation to end")
-		if world.NumAliensKilled == cmdArgs.NumAliens {
+		if len(world.Aliens) == 1 {
 			log.Debug("there can only be 1, we have a winner")
 			break
-			//TODO: write func to get last man standing who is not stuck
-			// assumption, stuck aliens lost
 		} else if world.NumAliensTrapped == cmdArgs.NumAliens - world.NumAliensKilled {
-			log.Debug("all aliens are stuck")
+			log.Debug("all aliens are Trapped")
 			break
 		}
 	}
@@ -136,21 +145,23 @@ func updateCity(cmdArgs common.CmdArgs, world *common.World, city string) (fight
 
 	log := cmdArgs.Log
 	fighting = false
-	log.Debugf("checking city=%s for fighting", city)
-	for i := 0; i < len(world.Aliens); i++ {
-		log.Debugf("working alien Id=%d", world.Aliens[i].Id)
-		if world.Aliens[i].Location == city {
-			ids = append(ids, world.Aliens[i].Id)
+	log.Debugf("updating city=%s", city)
+	for _, alien := range world.Aliens {
+		log.Debugf("working alien Id=%d", alien.Id)
+		if alien.Location == city {
+			ids = append(ids, alien.Id)
 		}
 	}
 	if len(ids) > 1 {
-		log.Infof("aliens=%v, are fighting in city=%s", ids, city)
+		log.Infof("aliens Ids=%v, are fighting in city=%s", ids, city)
 		log.Debug("killing off aliens and setting city for destruction")
 		world.NumAliensKilled = len(ids)
 		for j := 0; j < len(ids); j++ {
 			delete(world.Aliens, ids[j])
 		}
 		fighting = true
+	} else {
+		log.Debug("city remains")
 	}
 	return
 }

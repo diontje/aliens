@@ -39,7 +39,6 @@ aliens start -n 5
 	Args: func(cmd *cobra.Command, args []string) error {
 		cmdArgs.WorldName = strings.TrimSpace(cmdArgs.WorldName)
 		cmdArgs.WorldFileLocation = strings.TrimSpace(cmdArgs.WorldFileLocation)
-		cmdArgs.NumAliens = 2
 		numAliens, _ := cmd.Flags().GetString("numAliens")
 		numAliens = strings.TrimSpace(numAliens)
 		if len(numAliens) != 0 {
@@ -48,6 +47,8 @@ aliens start -n 5
 				return err
 			}
 			cmdArgs.NumAliens = i
+		} else {
+			cmdArgs.NumAliens = 2
 		}
 		return nil
 	},
@@ -61,7 +62,7 @@ aliens start -n 5
 
 func init() {
 	rootCmd.AddCommand(startCmd)
-	startCmd.Flags().StringP("numAliens", "n", "2", "number of aliens")
+	startCmd.Flags().StringP("numAliens", "n", "", "number of aliens")
 	startCmd.PersistentFlags().StringVarP(&cmdArgs.WorldName, "world", "", "earth",
 		"game file")
 	startCmd.PersistentFlags().StringVarP(&cmdArgs.WorldFileLocation, "path", "", "",
