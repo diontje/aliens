@@ -1,5 +1,5 @@
 # Alien Invasion
-Alien Invasion is a command line Alien game simulation. A number of aliens (--numAliens, default == 2) start from random cities determined by supplied data file (default == worlds/earth.dat). Aliens move for maximum 10000 times until either all aliens are Trapped or they cannot move to another city. During an iteration if more than one Alien lands in the same city, they fight and the city is removed from the world map.
+Alien Invasion is a command line game simulation. A number of aliens (--numAliens, default == 2) start from random cities determined by a supplied data file (default == worlds/earth.dat). Aliens randomly move east, west, etc., based on the data file for a maximum 10000 times until either all aliens are Trapped or they cannot move to another city. During an iteration if more than one Alien lands in the same city, they fight and the city is removed from the world map. Once the game is over the remaining map of the world with leftover cities is outputted to `out.dat`.
 
 ## Game Assumptions
 
